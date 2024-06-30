@@ -4,6 +4,7 @@ const bodyParser=require('body-parser');
 const path=require('path');
 const userRoute=require('./routes/userRoute');
 const connectionURL = require("./database/database");
+
 const PORT = process.env.PORT || 4000;
 app.use('/', userRoute);
 

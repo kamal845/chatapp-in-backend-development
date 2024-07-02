@@ -1,0 +1,10 @@
+<% if (typeof message !== 'undefined') { %>
+    <p style="color: red;"><%= message %></p>
+<% } %>
+<form action="/login" method="POST">
+  <input type="email" placeholder="Enter email" name="email" required>
+  <br>
+  <input type="password" placeholder="password" name="password" required>
+  <br>
+  <input type="submit" value="login">
+</form>

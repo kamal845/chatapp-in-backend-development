@@ -2,6 +2,7 @@ const express=require('express');
 const router=express.Router();
 const multer=require('multer');
 const path=require('path');
+const auth=require('../middleware/authMiddleware');
 const session=require('express-session');
 require('dotenv').config();
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -32,10 +33,10 @@ router.get('/user', (req, res) => {
 });
 router.post('/user',upload.single('image'),userController.user);
 //login
-router.get('/login',userController.loadLogin);
+router.get('/login',auth.isLogout,userController.loadLogin);
 router.post('/login',userController.Login);
-router.get('/logout',userController.logout);
-router.get('/dashboard',userController.loadDashboard);
+router.get('/logout',auth.isLogin,userController.logout);
+router.get('/dashboard',auth.isLogin,userController.loadDashboard);
 router.get('*',function(req,res){
   res.redirect('/');
 })

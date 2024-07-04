@@ -1,3 +1,40 @@
-<%- include('layouts/header.ejs') %>
+<%- include('./layouts/header.ejs') %>
 <h2 class="mb-4">Hii <%= user.name %></h2>
-<%- include('layouts/footer.ejs') %>
+<div class="row">
+    <div class="col-md-3">
+        <ul class="list-group">
+            <% if (users.length > 0) { %>
+                <% for (let i = 0; i < users.length; i++) { %>
+                    <li class="list-group-item list-group-items-dark cursor-pointer user-list">
+                        <img src="<%= 'http://localhost:4000/' + users[i]['image'] %>" alt="image" width="50px" height="50px">
+                        <%= users[i]['name'] %>
+                    </li>
+                <% } %>
+            <% } %>
+        </ul>
+    </div>
+    <div class="col-md-9">
+        <div class="start-head">
+            <h3>Click to start the chat</h3>
+            <div class="chat-section">
+                <div class="chat-container">
+                    <form action="" id="chat-form">
+                        <input type="text" name="message" placeholder="Enter message" id="message" required>
+                        <input type="submit" value="send Message" class="btn btn-primary">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var socket=io('/user-namespace');
+    $(document).ready(function () {
+        $('.user-list').click(function () {
+            $('.start-head').hide();
+            $('.chat-section').show();
+        });
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js" integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<%- include('./layouts/footer.ejs') %>

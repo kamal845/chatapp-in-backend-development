@@ -32,8 +32,10 @@ router.get('/user', (req, res) => {
   res.render('user', { message: null });
 });
 router.post('/user',upload.single('image'),userController.user);
+router.get('/user',upload.single('image'),userController.userLoad);
 //login
 router.get('/login',auth.isLogout,userController.loadLogin);
+
 router.post('/login',userController.Login);
 router.get('/logout',auth.isLogin,userController.logout);
 router.get('/dashboard',auth.isLogin,userController.loadDashboard);

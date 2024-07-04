@@ -6,11 +6,14 @@ const userRoute=require('./routes/userRoute');
 const connectDB = require("./database/database");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+// app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine','ejs');
+app.set('views', './views');
 const PORT = process.env.PORT || 4000;
 app.use('/', userRoute);
-
   const http=require('http').Server(app);
+  const io=require('socket.io')(http);
   try {
     http.listen(PORT, async () => {
         try {
@@ -24,6 +27,10 @@ app.use('/', userRoute);
 } catch (error) {
     console.log('Error:', error);
 }
-  app.use(express.static('public'));
-  app.set('view engine','ejs');
-app.set('views', './views');
+var usp=io.of('/user-namespace');
+usp.on('connection',function(socket){
+    console.log('user connected');
+    socket.on('disconnect',function(){
+        console.log('user disconnected');
+    });
+});

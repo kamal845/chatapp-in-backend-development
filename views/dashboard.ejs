@@ -1,40 +1,134 @@
 <%- include('./layouts/header.ejs') %>
-<h2 class="mb-4">Hii <%= user.name %></h2>
-<div class="row">
-    <div class="col-md-3">
-        <ul class="list-group">
-            <% if (users.length > 0) { %>
-                <% for (let i = 0; i < users.length; i++) { %>
-                    <li class="list-group-item list-group-items-dark cursor-pointer user-list">
-                        <img src="<%= 'http://localhost:4000/' + users[i]['image'] %>" alt="image" width="50px" height="50px">
-                        <%= users[i]['name'] %>
-                    </li>
-                <% } %>
-            <% } %>
-        </ul>
-    </div>
-    <div class="col-md-9">
-        <div class="start-head">
-            <h3>Click to start the chat</h3>
-            <div class="chat-section">
-                <div class="chat-container">
-                    <form action="" id="chat-form">
-                        <input type="text" name="message" placeholder="Enter message" id="message" required>
-                        <input type="submit" value="send Message" class="btn btn-primary">
-                    </form>
+    <h2 class="mb-4">Hii <%= user.name %>
+    </h2>
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="list-group">
+                <% if (users.length> 0) { %>
+                    <% users.forEach(user=> { %>
+                        <li class="list-group-item list-group-items-dark cursor-pointer user-list"
+                            data-id="<%= user._id %>">
+                            <img src="<%= 'http://localhost:4000/' + user.image %>" alt="image" width="50px"
+                                height="50px">
+                            <%= user.name %>
+                        </li>
+                        <% }) %>
+                            <% } %>
+            </ul>
+        </div>
+        <div class="col-md-9">
+            <h3 class="start-head">Click to start the chat</h3>
+            <div class="chat-section" style="display:none;">
+                <div class="chat-container" id="messages">
+                    <!-- Messages will be dynamically appended here -->
                 </div>
+                <form id="chat-form">
+                    <input type="text" name="message" placeholder="Enter message" id="message" required>
+                    <input type="submit" value="Send Message" class="btn btn-primary">
+                </form>
             </div>
         </div>
     </div>
-</div>
-<script>
-    var socket=io('/user-namespace');
-    $(document).ready(function () {
-        $('.user-list').click(function () {
-            $('.start-head').hide();
-            $('.chat-section').show();
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js"
+        integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var sender_id = '<%= user._id %>';
+            var socket = io('/user-namespace', {
+                auth: {
+                    token: '<%= user._id %>'
+                }
+            });
+            var receiver_id = null;
+
+            $('.user-list').click(function () {
+                $('.start-head').hide();
+                $('.chat-section').show();
+                receiver_id = $(this).data('id');
+                $('#messages').empty();
+
+                $.get(`/chat-history/${receiver_id}`, function (data) {
+                    data.forEach(function (msg) {
+                        var messageHtml = `
+                        <div class="message" data-id="${msg._id}">
+                            <div class="sender">${msg.sender_id === sender_id ? 'You' : 'Them'}:</div>
+                            <div class="text">${msg.message}</div>
+                            <button class="save-message">Save</button>
+                            <button class="delete-message">Delete</button>
+                        </div>
+                    `;
+                        $('#messages').append(messageHtml);
+                    });
+                });
+            });
+
+            $('#chat-form').submit(function (e) {
+                e.preventDefault();
+                var message = $('#message').val();
+                socket.emit('chat message', {
+                    sender_id: sender_id,
+                    receiver_id: receiver_id,
+                    message: message,
+                    sender_name: '<%= user.name %>'
+                });
+                $('#message').val('');
+                return false;
+            });
+
+            socket.on('chat message', function (msg) {
+                if ((msg.sender_id === sender_id && msg.receiver_id === receiver_id) || (msg.sender_id === receiver_id && msg.receiver_id === sender_id)) {
+                    var messageHtml = `
+                    <div class="message" data-id="${msg._id}">
+                        <div class="sender">${msg.sender_id === sender_id ? 'You' : 'Them'}:</div>
+                        <div class="text">${msg.message}</div>
+                        <button class="save-message">Save</button>
+                        <button class="delete-message">Delete</button>
+                    </div>
+                `;
+                    $('#messages').append(messageHtml);
+                }
+            });
+
+            // Handle save button click
+            $(document).on('click', '.save-message', function () {
+        var messageId = $(this).closest('.message').data('id');
+        $.post(`/save-message/${messageId}`, function (response) {
+        alert('Message saved!');
         });
-    });
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js" integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<%- include('./layouts/footer.ejs') %>
+        });
+
+            // Handle delete button click
+            $(document).on('click', '.delete-message', function () {
+        var messageId = $(this).closest('.message').data('id');
+        $.post(`/delete-message/${messageId}`, function (response) {
+        alert('Message deleted!');
+        $(`[data-id="${messageId}"]`).remove();
+        });
+        });
+            function loadChatHistory(receiverId) {
+                $('#messages').empty();
+                $.get(`/chat-history/${receiverId}`, function (data) {
+                    data.forEach(function (msg) {
+                        var messageHtml = `
+                <div class="message" data-id="${msg._id}">
+                    <div class="sender">${msg.sender_name}:</div>
+                    <div class="text">${msg.message}</div>
+                    <button class="save-message">Save</button>
+                    <button class="delete-message">Delete</button>
+                </div>
+            `;
+                        $('#messages').append(messageHtml);
+                    });
+                });
+            }
+            if (receiver_id) {
+    loadChatHistory(receiver_id);
+}
+        });
+    </script>
+    <%- include('./layouts/footer.ejs') %>
+      

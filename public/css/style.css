@@ -8337,5 +8337,15 @@ a[data-toggle="collapse"] {
   overflow: scroll;
 }
 .chat-section{
-  display:none;
+  /* display:none; */
+}
+.current-user-chat{
+  text-align: right;
+  margin:10px;
+  color:black;
+}
+.distance-user-chat{
+  text-align: left;
+  margin:10px;
+  color:blue;
 }
